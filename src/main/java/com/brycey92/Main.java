@@ -1,19 +1,18 @@
 package com.brycey92;
 
-import net.querz.nbt.io.NBTUtil;
-import net.querz.nbt.io.NamedTag;
-import net.querz.nbt.tag.CompoundTag;
-import net.querz.nbt.tag.Tag;
+//import net.querz.nbt.io.NBTUtil;
+//import net.querz.nbt.io.NamedTag;
+//import net.querz.nbt.tag.CompoundTag;
+//import net.querz.nbt.tag.Tag;
 
-//import dev.dewy.nbt.Nbt;
-//import dev.dewy.nbt.tags.collection.CompoundTag;
+import dev.dewy.nbt.Nbt;
+import dev.dewy.nbt.tags.collection.CompoundTag;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 public class Main {
@@ -62,66 +61,51 @@ public class Main {
             return;
         }
 
-        NamedTag rootNamedTag;
-//        CompoundTag rootCompoundTag;
+        System.out.println(path);
+        CompoundTag rootCompoundTag;
         try {
-//            rootCompoundTag = new Nbt().fromFile(file);
-//            System.out.println(rootCompoundTag.getName());
-            rootNamedTag = NBTUtil.read(file);
+            rootCompoundTag = new Nbt().fromFile(file);
+            System.out.println(rootCompoundTag.getName());
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
             return;
         }
 
-        /*
-        if (!rootNamedTag.getName().endsWith(".mca")) {
-            System.err.println("Found root tag not ending in \".mca\": " + rootNamedTag.getName() + " in file " + path);
-            System.exit(-1);
-            return;
-        }
-        */
+        System.out.println(rootCompoundTag.getName());
 
-        Tag<?> rootTag = rootNamedTag.getTag();
-        System.out.println(rootTag.getClass().getName());
-        if (!(rootTag instanceof CompoundTag)) {
-            System.err.println("Found non-CompoundTag root tag " + rootNamedTag.getName() + " in file " + path);
-            System.exit(-1);
-            return;
-        }
-        CompoundTag rootCompoundTag = (CompoundTag) rootTag;
-        for (Entry<String, Tag<?>> chunkEntry : rootCompoundTag.entrySet()) {
-            if (!chunkEntry.getKey().startsWith("Chunk [")) {
-                System.err.println("Found Tag not starting with \"Chunk[\": " + chunkEntry.getKey() + " in file " + path);
-                System.exit(-1);
-                return;
-            }
-
-            Tag<?> chunkTag = chunkEntry.getValue();
-            if (!(chunkTag instanceof CompoundTag)) {
-                System.err.println("Found non-CompoundTag " + chunkEntry.getKey() + " in file " + path);
-                System.exit(-1);
-                return;
-            }
-
-            CompoundTag chunkCompoundTag = (CompoundTag) chunkTag;
-
-            for (Entry<String, Tag<?>> blockEntry : chunkCompoundTag.entrySet()) {
-                Tag<?> blockTag = blockEntry.getValue();
-                if (!(blockTag instanceof CompoundTag)) {
-                    System.err.println("Found non-CompoundTag " + blockEntry.getKey() + " in file " + path);
-                    System.exit(-1);
-                    return;
-                }
-
-                CompoundTag blockCompoundTag = (CompoundTag) blockTag;
-                System.out.println(blockCompoundTag.getString("biome_name"));
-
-                if (biomeName.equals(blockCompoundTag.getString("biome_name"))) {
-                    System.out.println("Found " + biomeName + " at (X,Z) " + blockEntry.getKey());
-                    break;
-                }
-            }
-        }
+//        for (Entry<String, Tag<?>> chunkEntry : rootCompoundTag.entrySet()) {
+//            if (!chunkEntry.getKey().startsWith("Chunk [")) {
+//                System.err.println("Found Tag not starting with \"Chunk[\": " + chunkEntry.getKey() + " in file " + path);
+//                System.exit(-1);
+//                return;
+//            }
+//
+//            Tag<?> chunkTag = chunkEntry.getValue();
+//            if (!(chunkTag instanceof CompoundTag)) {
+//                System.err.println("Found non-CompoundTag " + chunkEntry.getKey() + " in file " + path);
+//                System.exit(-1);
+//                return;
+//            }
+//
+//            CompoundTag chunkCompoundTag = (CompoundTag) chunkTag;
+//
+//            for (Entry<String, Tag<?>> blockEntry : chunkCompoundTag.entrySet()) {
+//                Tag<?> blockTag = blockEntry.getValue();
+//                if (!(blockTag instanceof CompoundTag)) {
+//                    System.err.println("Found non-CompoundTag " + blockEntry.getKey() + " in file " + path);
+//                    System.exit(-1);
+//                    return;
+//                }
+//
+//                CompoundTag blockCompoundTag = (CompoundTag) blockTag;
+//                System.out.println(blockCompoundTag.getString("biome_name"));
+//
+//                if (biomeName.equals(blockCompoundTag.getString("biome_name"))) {
+//                    System.out.println("Found " + biomeName + " at (X,Z) " + blockEntry.getKey());
+//                    break;
+//                }
+//            }
+//        }
     }
 }

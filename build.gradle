@@ -17,8 +17,8 @@ configurations {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-    extraLibs 'com.github.Querz:NBT:6.1'
-//    extraLibs 'dev.dewy:nbt:1.5.1'
+//    extraLibs 'com.github.Querz:NBT:6.1'
+    extraLibs 'dev.dewy:nbt:1.5.1'
     configurations.implementation.extendsFrom(configurations.extraLibs)
 }
 

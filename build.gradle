@@ -10,10 +10,16 @@ repositories {
     maven { url 'https://jitpack.io/' }
 }
 
+configurations {
+    extraLibs
+}
+
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-    implementation 'com.github.Querz:NBT:6.1'
+    extraLibs 'com.github.Querz:NBT:6.1'
+//    extraLibs 'dev.dewy:nbt:1.5.1'
+    configurations.implementation.extendsFrom(configurations.extraLibs)
 }
 
 sourceSets {
@@ -21,6 +27,16 @@ sourceSets {
         java {
             srcDirs = ["src"]
         }
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.brycey92.Main'
+    }
+
+    from {
+        configurations.extraLibs.collect {it.isDirectory() ? it : zipTree(it)}
     }
 }
 

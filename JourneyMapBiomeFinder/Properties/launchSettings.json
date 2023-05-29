@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "JourneyMapBiomeFinder": {
+      "commandName": "Project",
+      "commandLineArgs": "\"minecraft:cold_beach\" \"C:\\Users\\Bryce\\AppData\\Roaming\\Curse\\Minecraft\\Instances\\The Pixelmon Modpack (1)\\journeymap\\data\\mp\\PokeValley_99080caa~d31f~4cae~9e6c~af65ca136a5c\""
+    }
+  }
+}

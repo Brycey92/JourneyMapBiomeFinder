@@ -1,6 +1,7 @@
 ﻿using Substrate;
 using Substrate.Core;
 using Substrate.Nbt;
+using System.Xml.Linq;
 
 namespace JourneyMapBiomeFinder
 {
@@ -13,17 +14,26 @@ namespace JourneyMapBiomeFinder
             if (args.Length < 2 || args[0] == null || args[0].Trim().Equals("") || args[1] == null || args[1].Trim().Equals(""))
             {
                 Console.WriteLine("Usage: <biome_name> <path>");
-                Console.WriteLine("\tbiome_name:\te.g. \"minecraft:cold_beach\"");
-                Console.WriteLine("\tpath:\tPath to your Minecraft instance's journeymap/data/mp/ServerName folder");
+                Console.WriteLine("\tbiome_name:\te.g. \"minecraft:plains\"");
+                Console.WriteLine("\tpath:\tPath to your Minecraft instance's journeymap/data/mp/YourServerName folder");
+                Console.WriteLine("\t\tThe server name folder may have a long string of letters, numbers, and \'~\' after the name");
                 return;
             }
 
-            if (Directory.Exists(args[1]))
+            if (!Directory.Exists(args[1]))
             {
-                string[] files = Directory.GetFiles(args[1], "*", SearchOption.AllDirectories);
-                foreach (string path in files)
+                Console.WriteLine(args[1] + " does not exist or is not a folder, aborting");
+                return;
+            }
+
+            Console.WriteLine("Searching for biomes...");
+
+            string[] files = Directory.GetFiles(args[1], "*", SearchOption.AllDirectories);
+            foreach (string path in files)
+            {
+                if (FindBiomesInFile(path, args[0]) != 0)
                 {
-                    FindBiomesInFile(path, args[0]);
+                    return;
                 }
             }
 
@@ -36,52 +46,81 @@ namespace JourneyMapBiomeFinder
             {
                 return 0;
             }
-            Console.WriteLine(path);
-            NbtTree tree = TryCreateFrom(path);
+            
+            RegionFile regionFile = TryCreateFrom(path);
 
-            foreach (var chunkNode in tree.Root)
+            if(regionFile == null)
             {
-                if(!chunkNode.Value.IsCastableTo(TagType.TAG_LIST))
-                {
-                    continue;
-                }
+                Console.WriteLine(path + " is not a valid region file, aborting");
+                return -1;
+            }
 
-                foreach(var blockNode in chunkNode.Value.ToTagCompound())
+            // Each region file has up to 32 * 32 = 1024 chunks
+            for (int x = 0; x < 32; x++)
+            {
+                for (int z = 0; z < 32; z++)
                 {
-                    TagNodeCompound blockCompound = blockNode.Value.ToTagCompound();
-
-                    if (!blockCompound.ContainsKey(biomeNameStr))// || !blockCompound[biomeNameStr].Equals(biomeToFind))
+                    if (regionFile.HasChunk(x, z))
                     {
-                        continue;
-                    }
+                        NbtTree chunkTree = new NbtTree();
+                        chunkTree.ReadFrom(regionFile.GetChunkDataInputStream(x, z));
 
-                    Console.WriteLine("Found " + biomeToFind + " at (X,Z) " + blockNode.Key);
+                        if (chunkTree.Root == null)
+                        {
+                            Console.WriteLine(path + " chunk " + x + "," + z + " has a null root, aborting");
+                            return -1;
+                        }
+
+                        // Each chunk has blocks
+                        foreach (string key in chunkTree.Root.Keys)
+                        {
+                            TagNode blockNode = chunkTree.Root[key];
+
+                            if (!blockNode.IsCastableTo(TagType.TAG_COMPOUND))
+                            {
+                                Console.WriteLine(path + " chunk " + x + "," + z + " is not castable to TagNodeCompound, aborting");
+                                return -1;
+                            }
+
+                            TagNodeCompound blockCompound = blockNode.ToTagCompound();
+
+                            if(!blockCompound.ContainsKey(biomeNameStr))
+                            {
+                                continue;
+                            }
+
+                            TagNode biomeNameNode = blockCompound[biomeNameStr];
+
+                            if (biomeNameNode == null)
+                            {
+                                Console.WriteLine(path + " chunk " + x + "," + z + " block (X,Z) " + key + " \"biome_name\" value is null, aborting");
+                                return -1;
+                            }
+
+                            if (!biomeNameNode.IsCastableTo(TagType.TAG_STRING))
+                            {
+                                Console.WriteLine(path + " chunk " + x + "," + z + " block (X,Z) " + key + " \"biome_name\" value is not castable to string, aborting");
+                                return -1;
+                            }
+
+                            if (!biomeNameNode.ToString().Equals(biomeToFind))
+                            {
+                                continue;
+                            }
+
+                            Console.WriteLine("Found " + biomeToFind + " at (X,Z) " + key);
+                        }
+                    }
                 }
             }
             return 0;
         }
 
-        public static NbtTree TryCreateFrom(string path)
+        private static RegionFile? TryCreateFrom(string path)
         {
-            return TryCreateFrom(path, CompressionType.GZip)
-                ?? TryCreateFrom(path, CompressionType.None);
-        }
-
-        private static NbtTree TryCreateFrom(string path, CompressionType compressionType)
-        {
-            Console.WriteLine(compressionType.ToString());
             try
             {
-                NBTFile file = new NBTFile(path);
-                NbtTree tree = new NbtTree();
-                tree.ReadFrom(file.GetDataInputStream(compressionType));
-
-                Console.WriteLine(tree.ToString());
-                Console.WriteLine(tree.Root);
-                if (tree.Root == null)
-                    return null;
-
-                return tree;
+                return new RegionFile(path);
             }
             catch (Exception ex)
             {
